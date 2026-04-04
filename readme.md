@@ -1,1 +1,1 @@
-<img src="radar.PNG" width=100>
+<img src="radar.PNG">

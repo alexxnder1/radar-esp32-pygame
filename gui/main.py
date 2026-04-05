@@ -17,6 +17,8 @@ HEIGHT=500
 RADIUS = WIDTH/2
 MAX_RADIUS_FOR_SENSOR = 150
 
+
+
 pygame.init()
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -56,8 +58,8 @@ def Reset():
     points.clear()
     
     global minValue, maxValue
-    minValue=0
-    maxValue=0
+    minValue=math.inf
+    maxValue=-math.inf
 
     ser.write(b'RESET\n')
     # print("Reset")
@@ -68,6 +70,31 @@ def map_range(x, A, B, C, D):
     y = C + (x - A) * (D - C) / (B - A)
     return y
 
+cx = RADIUS
+cy = HEIGHT
+
+radar_bg = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+
+# main
+for i in range(5):
+    pygame.draw.circle(radar_bg, (0, 50 if i != 0 else 255-50*i, 0), (cx, cy), RADIUS-50*i, 2)
+
+preDefAngles = []
+step = math.pi/8
+n = int(math.pi/step)+1
+
+for i in range(n):
+    preDefAngles.append((i)*step)
+
+for ang in preDefAngles:
+    point = (cx+RADIUS*math.cos(ang), cy-RADIUS*math.sin(ang))
+
+    if ang != 0 and ang != math.pi:
+        lbl = pygame_gui.elements.UILabel(text=f"{round(math.degrees(ang))}°", relative_rect=pygame.Rect((point[0]-50/2, point[1]-25),(50,25)), manager=manager)
+    
+    # test.append(lbl)
+    pygame.draw.line(radar_bg, (0, 50, 0), (cx, cy), point, 3)
+        
 while running:
     time_delta = clock.tick(60)
     for event in pygame.event.get():
@@ -89,21 +116,12 @@ while running:
     screen.fill((0,0,0))
     manager.draw_ui(screen)
     # pygame.display.update()
+    pygame.draw.line(screen, (0, 255, 0), (cx, cy), (cx+RADIUS*math.cos(math.radians(angle)), cy-RADIUS*math.sin(math.radians(angle))), 3)
 
-    cx = RADIUS
-    cy = HEIGHT
-    # main
-    for i in range(4):
-        pygame.draw.circle(screen, (0, 50 if i != 0 else 255-50*i, 0), (cx, cy), RADIUS-50*i, 2)
-
+    screen.blit(radar_bg, (0,0))
+    # targets
     for point in points:
         pygame.draw.circle(screen, (255, 0, 0), point, 3)   
-
-    preDefAngles = [math.pi/5, 2*math.pi/5, 3*math.pi/5, 4*math.pi/5]
-    for ang in preDefAngles:
-        pygame.draw.line(screen, (0, 50, 0), (cx, cy), (cx+RADIUS*math.cos(ang), cy-RADIUS*math.sin(ang)), 3)
-
-    pygame.draw.line(screen, (0, 255, 0), (cx, cy), (cx+RADIUS*math.cos(math.radians(angle)), cy-RADIUS*math.sin(math.radians(angle))), 3)
 
     while ser.in_waiting:
         # if ser.readline().count() < 0:
@@ -125,9 +143,9 @@ while running:
                 minValue = min(minValue, distance)
                 maxValue = max(maxValue, distance)
 
-                angleLabel.set_text(f"Angle: {angle}")
-                Min.set_text(f"Min: {minValue}")
-                Max.set_text(f"Max: {maxValue}")
+                angleLabel.set_text(f"Angle: {angle}°")
+                Min.set_text(f"Min: {minValue}cm")
+                Max.set_text(f"Max: {maxValue}cm")
             
                 r = map_range(distance, 0, MAX_RADIUS_FOR_SENSOR, 0, RADIUS)
                 points.append((cx+r*math.cos(math.radians(angle)), cy-r*math.sin(math.radians(angle))))

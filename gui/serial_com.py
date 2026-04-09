@@ -19,6 +19,7 @@ class SerialCom:
             return
         
         config.points.clear()
+        config.clusters.clear()
         
         config.minValue=math.inf
         config.maxValue=-math.inf

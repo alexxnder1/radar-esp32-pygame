@@ -4,6 +4,7 @@ import pygame_gui.elements.ui_text_box
 import serial
 import math
 from serial_com import SerialCom
+from pygame import gfxdraw
 
 serialCom = SerialCom()
 
@@ -66,6 +67,27 @@ for ang in preDefAngles:
     # test.append(lbl)
     pygame.draw.line(radar_bg, (0, 50, 0), (cx, cy), point, 3)
         
+class Cluster:
+    def __init__(self, id):
+        # id,
+        self.points_ids = []
+        # self.start =
+        # self.proportional_rate = None
+        # self.id = len(poin)
+        self.id = id
+        config.clusters.append(self)
+
+current_cluster = None
+def add_new_cluster(firstPoint):
+    global current_cluster
+    current_cluster = Cluster(len(config.clusters))
+    current_cluster.points_ids.append(firstPoint)
+    # pygame.draw.circle(screen, (255, 0, 0), point, 3)   
+
+def add_to_cluster(point):
+    global current_cluster
+    if current_cluster is not None:
+        current_cluster.points_ids.append(point)
 while running:
     time_delta = clock.tick(60)
 
@@ -94,8 +116,49 @@ while running:
 
     screen.blit(radar_bg, (0,0))
     # targets
+    count=0
+    # pygame.draw.polygon
+    # cluister
+    threshold=15
     for point in config.points:
-        pygame.draw.circle(screen, (255, 0, 0), point, 3)   
+        pygame.draw.circle(screen, (255,0,0), point, 5) 
+        
+        # if count > 0:
+        #     anterior = config.points[count-1]
+
+        #     print(math.dist(anterior, point))
+        #     if math.dist(anterior, point) < 10:
+        #         # config.cluster.append()
+        #         if len(config.clusters) > 0:
+        #             last_cluster = config.clusters[len(config.clusters)-1]
+
+        #             if len(last_cluster.points_ids) <= 30:
+        #                 last_cluster.points_ids.append(point)
+                    
+
+        #         else :
+        #             # pygame.draw.line(screen, (255,0,0), anterior,point, 2)
+        #             add_new_cluster()
+
+            
+        #     else: 
+        #         last_cluster = config.clusters[len(config.clusters)-1]
+
+        #         pygame.draw.polygon(screen, (0,255,0), last_cluster.points_ids, 2)
+        #         add_new_cluster()
+
+    
+        # else: pygame.draw.circle(screen, (255, 0, 0), point, 3)   
+        count+=1
+
+    # for cluster in config.clusters:
+    #     print("-----------------------------\n")
+    #     print(f'Id: {cluster.id}\n')
+    #     print(f'Points: \n')
+    #     # for p in cluster.points_ids:
+    #     print(f'{len(cluster.points_ids)}\n')
+    #     print("-----------------------------\n")
+
 
     while serialCom.ser.in_waiting:
         line = serialCom.ser.readline().decode().strip()
@@ -120,6 +183,7 @@ while running:
             
                 r = map_range(distance, 0, MAX_RADIUS_FOR_SENSOR, 0, RADIUS)
                 config.points.append((cx+r*math.cos(math.radians(angle)), cy-r*math.sin(math.radians(angle))))
+                
 
             except:
                 pass

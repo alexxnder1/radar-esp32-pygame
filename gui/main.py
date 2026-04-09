@@ -3,9 +3,10 @@ import pygame_gui
 import pygame_gui.elements.ui_text_box
 import serial
 import math
+from serial_com import SerialCom
 
+serialCom = SerialCom()
 
-ser = serial.Serial("COM6", 115200, timeout=1)
 count=0
 angle, distance = (0,0)
 running=True
@@ -33,37 +34,13 @@ ResetButton = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((WIDTH-100,
 StopButton = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((WIDTH-100, 50), (100, 50)), text="Stop", manager=manager)
 StartButton = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((WIDTH-100, 100), (100, 50)), text="Start", manager=manager)
 
-points = []
+from config import points
+
 minValue = math.inf
 maxValue = -math.inf
 
 justReseted = False
 
-
-def Stop():
-    ser.write(b'STOP\n')
-    # print("Stop")
-
-
-def Start():
-    ser.write(b'START\n')
-    # print("Start")
-
-def Reset():
-    global justReseted
-
-    if justReseted == True:
-        return
-
-    points.clear()
-    
-    global minValue, maxValue
-    minValue=math.inf
-    maxValue=-math.inf
-
-    ser.write(b'RESET\n')
-    # print("Reset")
-    justReseted=True
 
 # Stop()
 def map_range(x, A, B, C, D):
@@ -97,24 +74,27 @@ for ang in preDefAngles:
         
 while running:
     time_delta = clock.tick(60)
+
+    # event-processing
     for event in pygame.event.get():
         manager.process_events(event)
-        
         if event.type == pygame.QUIT:
             running=False
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == ResetButton:
-                Reset()
+                serialCom.Reset()
             elif event.ui_element == StopButton:
-                Stop()
+                serialCom.Stop()
             elif event.ui_element == StartButton:
-                Start()
+                serialCom.Start()
 
 
     manager.update(time_delta)
     screen.fill((0,0,0))
     manager.draw_ui(screen)
+
+    
     # pygame.display.update()
     pygame.draw.line(screen, (0, 255, 0), (cx, cy), (cx+RADIUS*math.cos(math.radians(angle)), cy-RADIUS*math.sin(math.radians(angle))), 3)
 
@@ -123,17 +103,14 @@ while running:
     for point in points:
         pygame.draw.circle(screen, (255, 0, 0), point, 3)   
 
-    while ser.in_waiting:
-        # if ser.readline().count() < 0:
-        #     continue
-
-        line = ser.readline().decode().strip()
+    while serialCom.ser.in_waiting:
+        line = serialCom.ser.readline().decode().strip()
         if line:
             try:
                 angle, distance = map(float, line.split(","))
 
                 if angle == 0 or angle == 180:
-                    Reset()
+                    serialCom.Reset()
 
                 else: justReseted = False
 

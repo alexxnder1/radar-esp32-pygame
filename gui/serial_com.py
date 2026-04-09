@@ -1,6 +1,6 @@
 import math
 import serial
-from config import points
+import config
 
 class SerialCom:
     def __init__(self):
@@ -15,15 +15,13 @@ class SerialCom:
         # print("Start")
 
     def Reset(self):
-        global justReseted
-        if justReseted == True:
+        if config.justReseted == True:
             return
         
-        points.clear()
+        config.points.clear()
         
-        global minValue, maxValue
-        minValue=math.inf
-        maxValue=-math.inf
-        self.ser.write(b'RESET\n')
+        config.minValue=math.inf
+        config.maxValue=-math.inf
         # print("Reset")
-        justReseted=True
+        config.justReseted=True
+        self.ser.write(b'RESET\n')

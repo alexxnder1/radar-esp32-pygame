@@ -34,13 +34,7 @@ ResetButton = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((WIDTH-100,
 StopButton = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((WIDTH-100, 50), (100, 50)), text="Stop", manager=manager)
 StartButton = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((WIDTH-100, 100), (100, 50)), text="Start", manager=manager)
 
-from config import points
-
-minValue = math.inf
-maxValue = -math.inf
-
-justReseted = False
-
+import config
 
 # Stop()
 def map_range(x, A, B, C, D):
@@ -94,13 +88,13 @@ while running:
     screen.fill((0,0,0))
     manager.draw_ui(screen)
 
-    
+
     # pygame.display.update()
     pygame.draw.line(screen, (0, 255, 0), (cx, cy), (cx+RADIUS*math.cos(math.radians(angle)), cy-RADIUS*math.sin(math.radians(angle))), 3)
 
     screen.blit(radar_bg, (0,0))
     # targets
-    for point in points:
+    for point in config.points:
         pygame.draw.circle(screen, (255, 0, 0), point, 3)   
 
     while serialCom.ser.in_waiting:
@@ -112,20 +106,20 @@ while running:
                 if angle == 0 or angle == 180:
                     serialCom.Reset()
 
-                else: justReseted = False
+                else: config.justReseted = False
 
                 if distance > MAX_RADIUS_FOR_SENSOR:
                     continue
                 
-                minValue = min(minValue, distance)
-                maxValue = max(maxValue, distance)
+                config.minValue = min(config.minValue, distance)
+                config.maxValue = max(config.maxValue, distance)
 
                 angleLabel.set_text(f"Angle: {angle}°")
-                Min.set_text(f"Min: {minValue}cm")
-                Max.set_text(f"Max: {maxValue}cm")
+                Min.set_text(f"Min: {config.minValue}cm")
+                Max.set_text(f"Max: {config.maxValue}cm")
             
                 r = map_range(distance, 0, MAX_RADIUS_FOR_SENSOR, 0, RADIUS)
-                points.append((cx+r*math.cos(math.radians(angle)), cy-r*math.sin(math.radians(angle))))
+                config.points.append((cx+r*math.cos(math.radians(angle)), cy-r*math.sin(math.radians(angle))))
 
             except:
                 pass
